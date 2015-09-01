@@ -22,7 +22,7 @@ class Convolution1D(Layer):
 
         super(Convolution1D, self).__init__()
         self.nb_filter = nb_filter
-        self.input_dim = input_dim
+        self.input_dim = self.get_number_from_index(input_dim,1)
         self.filter_length = filter_length
         self.subsample_length = subsample_length
         self.init = initializations.get(init)
@@ -31,7 +31,7 @@ class Convolution1D(Layer):
         self.border_mode = border_mode
 
         self.input = T.tensor3()
-        self.W_shape = (nb_filter, input_dim, filter_length, 1)
+        self.W_shape = (nb_filter, self.input_dim, filter_length, 1)
         self.W = self.init(self.W_shape)
         self.b = shared_zeros((nb_filter,))
 
@@ -78,6 +78,15 @@ class Convolution1D(Layer):
         output = T.reshape(output, (output.shape[0], output.shape[1], output.shape[2])).dimshuffle(0, 2, 1)
         return output
 
+    def calc_output_dims(self, lastdim):
+        if 'same'==self.border_mode:
+            if self.subsample_length==1:
+                return [lastdim[0], self.nb_filter]
+            raise Exception ("Not implemented") #Jeremy: I don't understand this case, perhaps get_output is wrong for this case anyway?
+        if 'valid'==self.border_mode:
+            return [(lastdim[0]-self.filter_length) // self.subsample_length + 1, self.nb_filter]
+        return [(lastdim[0]+self.filter_length+self.subsample_length-2) // self.subsample_length, self.nb_filter]
+
     def get_config(self):
         return {"name": self.__class__.__name__,
                 "input_dim": self.input_dim,
@@ -110,13 +119,13 @@ class Convolution2D(Layer):
         self.subsample = subsample
         self.border_mode = border_mode
         self.nb_filter = nb_filter
-        self.stack_size = stack_size
+        self.stack_size = self.get_number_from_index(stack_size,0)
 
         self.nb_row = nb_row
         self.nb_col = nb_col
 
         self.input = T.tensor4()
-        self.W_shape = (nb_filter, stack_size, nb_row, nb_col)
+        self.W_shape = (nb_filter, self.stack_size, nb_row, nb_col)
         self.W = self.init(self.W_shape)
         self.b = shared_zeros((nb_filter,))
 
@@ -176,6 +185,15 @@ class Convolution2D(Layer):
 
         return self.activation(conv_out + self.b.dimshuffle('x', 0, 'x', 'x'))
 
+    def calc_output_dims(self, lastdim):
+        if 'same'==self.border_mode:
+            if self.subsample_length==1:
+                return [self.nb_filter, lastdim[1], lastdim[2]]
+            raise Exception ("Not implemented") #Jeremy: I don't understand this case, perhaps get_output is wrong for this case anyway?
+        if 'valid'==self.border_mode:
+                return [self.nb_filter, (lastdim[1]-self.nb_row)//self.subsample[0] + 1, (lastdim[2]-self.nb_col)//self.subsample[1] +1]
+        return [self.nb_filter, (lastdim[1]+self.nb_row+self.subsample[0]-2)//self.subsample[0], (lastdim[2]+self.nb_col+self.subsample[1]-2)//self.subsample[1]]
+
     def get_config(self):
         return {"name": self.__class__.__name__,
                 "nb_filter": self.nb_filter,
@@ -213,6 +231,10 @@ class MaxPooling1D(Layer):
         output = T.signal.downsample.max_pool_2d(X, ds=self.poolsize, st=self.st, ignore_border=self.ignore_border)
         output = output.dimshuffle(0, 2, 1, 3)
         return T.reshape(output, (output.shape[0], output.shape[1], output.shape[2]))
+    
+    def calc_output_dims(self, lastdim):
+        theo=T.signal.downsample.DownSampleFactorMax.out_shape([lastdim[0],1],self.poolsize,self.ignore_border,self.st)
+        return [theo[0], lastdim[1]]
 
     def get_config(self):
         return {"name": self.__class__.__name__,
@@ -233,6 +255,10 @@ class MaxPooling2D(Layer):
         X = self.get_input(train)
         output = T.signal.downsample.max_pool_2d(X, ds=self.poolsize, st=self.stride, ignore_border=self.ignore_border)
         return output
+
+    def calc_output_dims(self, lastdim):
+        theo=T.signal.downsample.DownSampleFactorMax.out_shape([lastdim[1],lastdim[2]],self.poolsize,self.ignore_border,self.stride)
+        return [lastdim[0],theo[0],theo[1]]
 
     def get_config(self):
         return {"name": self.__class__.__name__,

@@ -110,6 +110,11 @@ class Layer(object):
         for i in range(len(self.params)):
             self.params[i].name = '%s_p%d' % (name, i)
 
+    def get_number_from_index(self, input, index):
+        if hasattr(input, "get_top_dims"):
+            return input.get_top_dims()[index]
+        return input
+
 
 class MaskedLayer(Layer):
     '''
@@ -256,6 +261,9 @@ class Dropout(MaskedLayer):
                 X *= retain_prob
         return X
 
+    def calc_output_dims(self, lastdims):
+        return lastdims
+
     def get_config(self):
         return {"name": self.__class__.__name__,
                 "p": self.p}
@@ -274,6 +282,9 @@ class Activation(MaskedLayer):
     def get_output(self, train=False):
         X = self.get_input(train)
         return self.activation(X)
+
+    def calc_output_dims(self, lastdims):
+        return lastdims
 
     def get_config(self):
         return {"name": self.__class__.__name__,
@@ -297,6 +308,9 @@ class Reshape(Layer):
         nshape = make_tuple(X.shape[0], *self.dims)
         return theano.tensor.reshape(X, nshape)
 
+    def get_output_dims(self):
+        return self.dims
+
     def get_config(self):
         return {"name": self.__class__.__name__,
                 "dims": self.dims}
@@ -318,6 +332,25 @@ class Permute(Layer):
         return {"name": self.__class__.__name__,
                 "dims": self.dims}
 
+    def calc_output_dims(self, lastdims):
+        return [lastdims[i] for i in self.dims]
+
+class SpecifyShape(Layer):
+    def __init__(self, dims):
+        super(SpecifyShape, self).__init__()
+        self.dims=dims
+
+    def get_output(self, train):
+        X=self.get_input(train)
+        return X #T.specify_shape doesn't yet support the fact that we don't know the first dimension, so we can't call it here.
+
+    def get_config(self):
+        return {"name": self.__class__.__name__,
+                "dims": self.dims}
+
+    def get_output_dims(self):
+        return self.dims
+        
 
 class Flatten(Layer):
     '''
@@ -332,6 +365,9 @@ class Flatten(Layer):
         size = theano.tensor.prod(X.shape) // X.shape[0]
         nshape = (X.shape[0], size)
         return theano.tensor.reshape(X, nshape)
+
+    def calc_output_dims(self, lastdims):
+        return [np.prod(lastdims)]
 
 
 class RepeatVector(Layer):
@@ -351,6 +387,9 @@ class RepeatVector(Layer):
         stacked = theano.tensor.stack(*tensors)
         return stacked.dimshuffle((1, 0, 2))
 
+    def calc_output_dims(self, lastdims):
+        return [self.n, lastdims[0]]
+
     def get_config(self):
         return {"name": self.__class__.__name__,
                 "n": self.n}
@@ -367,7 +406,7 @@ class Dense(Layer):
         super(Dense, self).__init__()
         self.init = initializations.get(init)
         self.activation = activations.get(activation)
-        self.input_dim = input_dim
+        self.input_dim =  self.get_number_from_index(input_dim,0)
         self.output_dim = output_dim
 
         self.input = T.matrix()
@@ -406,6 +445,9 @@ class Dense(Layer):
         self.W.name = '%s_W' % name
         self.b.name = '%s_b' % name
 
+    def get_output_dims(self):
+        return [self.output_dim]
+
     def get_output(self, train=False):
         X = self.get_input(train)
         output = self.activation(T.dot(X, self.W) + self.b)
@@ -441,6 +483,9 @@ class ActivityRegularization(Layer):
     def get_output(self, train=False):
         return self.get_input(train)
 
+    def calc_output_dims(self, lastdims):
+        return lastdims
+
     def get_config(self):
         return {"name": self.__class__.__name__,
                 "l1": self.l1,
@@ -462,7 +507,7 @@ class TimeDistributedDense(MaskedLayer):
         super(TimeDistributedDense, self).__init__()
         self.init = initializations.get(init)
         self.activation = activations.get(activation)
-        self.input_dim = input_dim
+        self.input_dim = self.get_number_from_index(input_dim,1)
         self.output_dim = output_dim
 
         self.input = T.tensor3()
@@ -499,6 +544,9 @@ class TimeDistributedDense(MaskedLayer):
         X = self.get_input(train)
         output = self.activation(T.dot(X.dimshuffle(1, 0, 2), self.W) + self.b)
         return output.dimshuffle(1, 0, 2)
+    
+    def calc_output_dims(self, lastdims):
+        return [lastdims[0], self.output_dim]
 
     def get_config(self):
         return {"name": self.__class__.__name__,

@@ -80,6 +80,23 @@ class Sequential(Layer):
         return {"name": self.__class__.__name__,
                 "layers": [layer.get_config() for layer in self.layers]}
 
+    def get_top_dims(self):
+        found=False
+        iFound=1
+        for i in range(len(self.layers)):
+            if hasattr(self.layers[-1-i],"get_output_dims"):
+                found=True
+                iFound=len(self.layers)-i-1
+                dims=self.layers[-1-i].get_output_dims()
+                break
+        if not found:
+            raise Exception("Could not predict dimension because there hasn't yet been a layer with known dims")
+        for i in range(iFound+1, len(self.layers)):
+            if not hasattr(self.layers[i],"calc_output_dims"):
+                raise Exception("Could not predict dimension because there has been a layer which doesn't calculate its output dimension")
+            dims=self.layers[i].calc_output_dims(dims)
+        return dims
+
 
 class Graph(Layer):
     '''
