@@ -110,11 +110,6 @@ class Layer(object):
         for i in range(len(self.params)):
             self.params[i].name = '%s_p%d' % (name, i)
 
-    def get_number_from_index(self, input, index):
-        if hasattr(input, "get_top_dims"):
-            return input.get_top_dims()[index]
-        return input
-
 
 class MaskedLayer(Layer):
     '''
@@ -406,7 +401,7 @@ class Dense(Layer):
         super(Dense, self).__init__()
         self.init = initializations.get(init)
         self.activation = activations.get(activation)
-        self.input_dim =  self.get_number_from_index(input_dim,0)
+        self.input_dim =  input_dim
         self.output_dim = output_dim
 
         self.input = T.matrix()
@@ -507,7 +502,7 @@ class TimeDistributedDense(MaskedLayer):
         super(TimeDistributedDense, self).__init__()
         self.init = initializations.get(init)
         self.activation = activations.get(activation)
-        self.input_dim = self.get_number_from_index(input_dim,1)
+        self.input_dim = input_dim
         self.output_dim = output_dim
 
         self.input = T.tensor3()

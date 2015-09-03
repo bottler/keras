@@ -22,7 +22,7 @@ class Convolution1D(Layer):
 
         super(Convolution1D, self).__init__()
         self.nb_filter = nb_filter
-        self.input_dim = self.get_number_from_index(input_dim,1)
+        self.input_dim = input_dim
         self.filter_length = filter_length
         self.subsample_length = subsample_length
         self.init = initializations.get(init)
@@ -31,7 +31,7 @@ class Convolution1D(Layer):
         self.border_mode = border_mode
 
         self.input = T.tensor3()
-        self.W_shape = (nb_filter, self.input_dim, filter_length, 1)
+        self.W_shape = (nb_filter, input_dim, filter_length, 1)
         self.W = self.init(self.W_shape)
         self.b = shared_zeros((nb_filter,))
 
@@ -119,13 +119,13 @@ class Convolution2D(Layer):
         self.subsample = subsample
         self.border_mode = border_mode
         self.nb_filter = nb_filter
-        self.stack_size = self.get_number_from_index(stack_size,0)
+        self.stack_size = stack_size
 
         self.nb_row = nb_row
         self.nb_col = nb_col
 
         self.input = T.tensor4()
-        self.W_shape = (nb_filter, self.stack_size, nb_row, nb_col)
+        self.W_shape = (nb_filter, stack_size, nb_row, nb_col)
         self.W = self.init(self.W_shape)
         self.b = shared_zeros((nb_filter,))
 
