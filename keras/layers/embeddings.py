@@ -125,6 +125,9 @@ class WordContextProduct(Layer):
         dot = theano.tensor.reshape(dot, (X.shape[0], 1))
         return self.activation(dot)
 
+    def get_output_dims(self):
+        return [1]
+
     def get_config(self):
         return {"name": self.__class__.__name__,
                 "input_dim": self.input_dim,

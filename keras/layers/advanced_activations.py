@@ -14,6 +14,9 @@ class LeakyReLU(MaskedLayer):
         X = self.get_input(train)
         return ((X + abs(X)) / 2.0) + self.alpha * ((X - abs(X)) / 2.0)
 
+    def calc_output_dims(self, lastdims):
+        return lastdims
+
     def get_config(self):
         return {"name": self.__class__.__name__,
                 "alpha": self.alpha}
@@ -41,7 +44,7 @@ class PReLU(MaskedLayer):
         neg = self.alphas * ((X - abs(X)) / 2.0)
         return pos + neg
 
-    def get_output_dims():
+    def get_output_dims(self):
         return self.input_shape
 
     def get_config(self):
@@ -75,7 +78,7 @@ class ParametricSoftplus(MaskedLayer):
         X = self.get_input(train)
         return T.nnet.softplus(self.betas * X) * self.alphas
 
-    def get_output_dims():
+    def get_output_dims(self):
         return self.input_shape
 
     def get_config(self):
@@ -100,6 +103,9 @@ class ThresholdedLinear(MaskedLayer):
         X = self.get_input(train)
         return T.switch( abs(X) < self.theta, 0, X )
 
+    def calc_output_dims(self, lastdims):
+        return lastdims
+
     def get_config(self):
         return {"name": self.__class__.__name__,
             "theta": self.theta}
@@ -119,6 +125,9 @@ class ThresholdedReLu(MaskedLayer):
     def get_output(self, train):
         X = self.get_input(train)
         return T.switch( X > self.theta, X, 0 )
+
+    def calc_output_dims(self, lastdims):
+        return lastdims
 
     def get_config(self):
         return {"name": self.__class__.__name__,

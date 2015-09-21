@@ -64,7 +64,7 @@ class BatchNormalization(Layer):
         out = self.gamma * X_normed + self.beta
         return out
 
-    def get_output_dims():
+    def get_output_dims(self):
         return self.input_shape
 
     def get_config(self):

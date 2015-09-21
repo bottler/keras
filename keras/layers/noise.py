@@ -23,6 +23,9 @@ class GaussianNoise(MaskedLayer):
             return X + self.srng.normal(size=X.shape, avg=0.0, std=self.sigma,
                                         dtype=theano.config.floatX)
 
+    def calc_output_dims(self, lastdims):
+        return lastdims
+
     def get_config(self):
         return {"name": self.__class__.__name__,
                 "sigma": self.sigma}
@@ -47,6 +50,9 @@ class GaussianDropout(MaskedLayer):
             # self.p refers to drop probability rather than retain probability (as in paper) to match Dropout layer syntax
             X *= self.srng.normal(size=X.shape, avg=1.0, std=T.sqrt(self.p / (1.0 - self.p)), dtype=theano.config.floatX)
         return X
+
+    def calc_output_dims(self, lastdims):
+        return lastdims
 
     def get_config(self):
         return {"name": self.__class__.__name__,
