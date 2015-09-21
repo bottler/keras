@@ -340,7 +340,7 @@ class Permute(Layer):
         return [lastdims[i] for i in self.dims]
 
 class SpecifyShape(Layer):
-    def __init__(self, dims):
+    def __init__(self, *dims):
         super(SpecifyShape, self).__init__()
         self.dims=dims
 
