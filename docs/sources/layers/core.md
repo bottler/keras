@@ -72,6 +72,24 @@ get_config()
 - __Return__: Configuration dictionary describing the layer.
 
 
+__Optional methods__:
+These methods are not defined in the base class but subclasses may choose to define one or the other of them if they can. They are used only by the `get_top_dims` function in Sequential.
+```python
+get_output_dims()
+```
+
+- __Return__: Array of dimensions of the output. (The initial dimension for the batch size is excluded).
+
+
+```python
+calc_output_dims(lastdims)
+```
+- __Arguments__: 
+    - __lastdims__: arrays of dimensions of the input of this layer, excluding the initial dimension corresponding to the batch size.
+
+- __Return__: Array of dimensions of the output, excluding the initial dimension corresponding to the batch size, given the input has the shape given by lastdims.
+
+
 ---
 
 ## Dense
@@ -224,6 +242,30 @@ Reshape the input to a new shape containing the same number of units.
 # input shape: (nb_samples, 10)
 model.add(Dense(10, 100)) # output shape: (nb_samples, 100)
 model.add(Reshape(10, 10))  # output shape: (nb_samples, 10, 10)
+```
+
+---
+
+## SpecifyShape
+```python
+keras.layers.core.SpecifyShape(*dims)
+```
+
+Returns the input unchanged. This layer lets Keras know what the shape of the input will be, so that get_top_dims can work.
+
+- __Input shape__: `(nb_samples, *dims)`.
+
+- __Output shape__: `(nb_samples, *dims)`.
+
+- __Arguments__:
+
+    - *dims: integers. Dimensions of the shape.
+
+- __Example__:
+```python
+# input shape: (nb_samples, 10)
+model.add(SpecifyShape(10))  # output shape: (nb_samples, 10)
+model.add(Dense(model.get_top_dims()[0], 100)) # output shape: (nb_samples, 100)
 ```
 
 ---

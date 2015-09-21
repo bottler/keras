@@ -7,6 +7,8 @@ model = keras.models.Sequential()
 ```
 - __Methods__:
     - __add__(layer): Add a layer to the model.
+    - __get_top_dims__(): return the dimensions of the output of the top layer, if possible.
+        - (This function will only work when the model contains layers which can calculate their output size using get_output_dims and calc_output_dims. Otherwise an error will be thrown.)
     - __compile__(optimizer, loss, class_mode="categorical"):
         - __Arguments__:
             - __optimizer__: str (name of optimizer) or optimizer object. See [optimizers](optimizers.md).

@@ -83,6 +83,49 @@ model.fit(X_train, Y_train, batch_size=32, nb_epoch=1)
 
 ---
 
+### Alternative convnet using calculated dimensions.
+
+It is possible to leave the calculation of layers' input sizes to Keras. This code works just like the previous example, but it is easier to make small changes to. It is designed to work on input which is 32x32 pixels. 
+
+```python
+from keras.models import Sequential
+from keras.layers.core import Dense, Dropout, Activation, Flatten, SpecifyShape
+from keras.layers.convolutional import Convolution2D, MaxPooling2D
+from keras.optimizers import SGD
+
+model = Sequential()
+model.add(SpecifyShape(3, 32, 32))
+model.add(Convolution2D(32, model.get_top_dims()[0], 3, 3, border_mode='full')) 
+model.add(Activation('relu'))
+model.add(Convolution2D(32, model.get_top_dims()[0], 3, 3))
+model.add(Activation('relu'))
+model.add(MaxPooling2D(poolsize=(2, 2)))
+model.add(Dropout(0.25))
+
+model.add(Convolution2D(64, model.get_top_dims()[0], 3, 3, border_mode='full')) 
+model.add(Activation('relu'))
+model.add(Convolution2D(64, model.get_top_dims()[0], 3, 3)) 
+model.add(Activation('relu'))
+model.add(MaxPooling2D(poolsize=(2, 2)))
+model.add(Dropout(0.25))
+
+model.add(Flatten())
+model.add(Dense(model.get_top_dims()[0], 256))
+model.add(Activation('relu'))
+model.add(Dropout(0.5))
+
+model.add(Dense(model.get_top_dims()[0], 10))
+model.add(Activation('softmax'))
+
+sgd = SGD(lr=0.1, decay=1e-6, momentum=0.9, nesterov=True)
+model.compile(loss='categorical_crossentropy', optimizer=sgd)
+
+model.fit(X_train, Y_train, batch_size=32, nb_epoch=1)
+
+```
+
+---
+
 ### Sequence classification with LSTM
 
 ```python
