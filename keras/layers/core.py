@@ -401,7 +401,7 @@ class Dense(Layer):
         super(Dense, self).__init__()
         self.init = initializations.get(init)
         self.activation = activations.get(activation)
-        self.input_dim =  input_dim
+        self.input_dim = input_dim
         self.output_dim = output_dim
 
         self.input = T.matrix()
