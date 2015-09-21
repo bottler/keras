@@ -99,10 +99,11 @@ class Callback(object):
 class BaseLogger(Callback):
     def on_train_begin(self, logs={}):
         self.verbose = self.params['verbose']
+        self.nb_epoch = self.params['nb_epoch']
 
     def on_epoch_begin(self, epoch, logs={}):
         if self.verbose:
-            print('Epoch %d' % epoch)
+            print('Epoch %d/%d' % (epoch + 1, self.nb_epoch))
             self.progbar = Progbar(target=self.params['nb_sample'],
                                    verbose=self.verbose)
         self.seen = 0
@@ -271,4 +272,4 @@ class LearningRateScheduler(Callback):
         self.schedule = schedule
 
     def on_epoch_begin(self, epoch, logs={}):
-        model.lr.set_value(self.schedule(epoch))
+        self.model.optimizer.lr.set_value(self.schedule(epoch))
