@@ -41,7 +41,7 @@ class PReLU(MaskedLayer):
         neg = self.alphas * ((X - abs(X)) / 2.0)
         return pos + neg
 
-    def get_output_shape():
+    def get_output_dims():
         return self.input_shape
 
     def get_config(self):
@@ -75,7 +75,7 @@ class ParametricSoftplus(MaskedLayer):
         X = self.get_input(train)
         return T.nnet.softplus(self.betas * X) * self.alphas
 
-    def get_output_shape():
+    def get_output_dims():
         return self.input_shape
 
     def get_config(self):
